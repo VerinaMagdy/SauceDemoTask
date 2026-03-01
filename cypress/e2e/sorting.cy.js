@@ -5,12 +5,11 @@ const loginPage = new LoginPage()
 const itemsPage = new ItemsPage()
 
 const USERNAME = 'standard_user'
-const PASSWORD = 'secret_sauce'
 
-describe('Sorting Feature', () => {
+describe('Sorting', () => {
   beforeEach(() => {
     loginPage.visit()
-    loginPage.login(USERNAME, PASSWORD)
+    loginPage.login(USERNAME, Cypress.env('PASSWORD'))
     cy.url().should('include', '/inventory.html')
   })
 

@@ -11,16 +11,14 @@ const users = [
   { username: 'visual_user', shouldPass: true }
 ]
 
-const PASSWORD = 'secret_sauce'
-
-describe('Login Feature with all users', () => {
+describe('Login with all users', () => {
   beforeEach(() => {
     loginPage.visit()
   })
 
   users.forEach((user) => {
     it(`Login test for ${user.username}`, () => {
-      loginPage.login(user.username, PASSWORD)
+      loginPage.login(user.username, Cypress.env('PASSWORD'))
 
       if (user.shouldPass) {
         cy.url().should('include', 'inventory.html')

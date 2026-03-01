@@ -8,11 +8,9 @@ const users = [
   { username: 'standard_user', invBadge: 1 },
   { username: 'problem_user', invBadge: 2 }, // badge number doesn't change in inventory page
   { username: 'performance_glitch_user', invBadge: 1 },
-  { username: 'error_user', invBadge: 1 },
+  { username: 'error_user', invBadge: 2, removeCrash: true },
   { username: 'visual_user', invBadge: 1 }
 ]
-
-const PASSWORD = 'secret_sauce'
 
 const addFirstTwoItems = () => {
   itemsPage.addToCartButton().eq(0).click()
@@ -23,12 +21,12 @@ const verifyCartBadge = (count) => {
   itemsPage.cartBadge().should('have.text', String(count))
 }
 
-describe('Cart Feature', () => {
-  users.forEach(({ username, invBadge }) => {
+describe('Cart', () => {
+  users.forEach(({ username, invBadge, removeCrash }) => {
     describe(`Cart behavior for ${username}`, () => {
       beforeEach(() => {
         loginPage.visit()
-        loginPage.login(username, PASSWORD)
+        loginPage.login(username, Cypress.env('PASSWORD'))
         cy.url().should('include', 'inventory.html')
       })
 
@@ -52,17 +50,20 @@ describe('Cart Feature', () => {
       })
 
       it('Remove one item from inventory page itself', () => {
-        if (username === 'error_user') {
-          cy.log('Skipping for error_user')
-          return
-        }
-
         addFirstTwoItems()
         verifyCartBadge(2)
 
-        itemsPage.addToCartButton().eq(0).click()
+        if (removeCrash) {
+          cy.once('uncaught:exception', (err) => {
+            expect(err.message).to.include('Failed to remove item')
+            return false
+          })
 
-        // Verify badge expectation per user
+          itemsPage.addToCartButton().eq(0).click()
+        } else {
+          itemsPage.addToCartButton().eq(0).click()
+        }
+
         verifyCartBadge(invBadge)
       })
     })

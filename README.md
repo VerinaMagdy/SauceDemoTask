@@ -34,7 +34,7 @@ Project follows:
 Clone the repository:
 
 - git clone https://github.com/VerinaMagdy/SauceDemoTask.git
-- cd cypress-project
+- cd cypress
 
 **Install dependencies**
 - npm install

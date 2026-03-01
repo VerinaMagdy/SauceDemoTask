@@ -10,11 +10,9 @@ const users = [
   { username: 'standard_user', checkoutOk: true, lastNameWorks: true },
   { username: 'problem_user', checkoutOk: false, lastNameWorks: false },
   { username: 'performance_glitch_user', checkoutOk: true, lastNameWorks: true },
-  { username: 'error_user', checkoutOk: true, lastNameWorks: true },
+  { username: 'error_user', checkoutCrash: true },
   { username: 'visual_user', checkoutOk: true, lastNameWorks: true }
 ]
-
-const PASSWORD = 'secret_sauce'
 
 const addItemAndStartCheckout = () => {
   itemsPage.addToCartButton().eq(0).click()
@@ -22,7 +20,7 @@ const addItemAndStartCheckout = () => {
   checkoutPage.checkoutButton().click()
 }
 
-describe('Checkout Feature', () => {
+describe('Checkout', () => {
   let checkoutData
 
   before(() => {
@@ -31,26 +29,34 @@ describe('Checkout Feature', () => {
     })
   })
 
-  users.forEach(({ username, checkoutOk, lastNameWorks }) => {
+  users.forEach(({ username, checkoutOk, lastNameWorks, checkoutCrash }) => {
     describe(`Checkout behavior for ${username}`, () => {
       beforeEach(() => {
         loginPage.visit()
-        loginPage.login(username, PASSWORD)
+        loginPage.login(username, Cypress.env('PASSWORD'))
         cy.url().should('include', 'inventory.html')
       })
 
       it('Complete checkout with valid data', () => {
-        if (username === 'error_user') {
-          cy.log('Skipping for error_user')
+        if (checkoutCrash) {
+          cy.on('uncaught:exception', () => false)
+
+          addItemAndStartCheckout()
+
+          checkoutPage.firstNameInput().type(checkoutData.valid.firstName)
+          checkoutPage.lastNameInput().type(checkoutData.valid.lastName)
+          checkoutPage.postalCodeInput().type(checkoutData.valid.postalCode)
+
+          checkoutPage.continueButton().click()
+
           return
         }
 
+        // for the rest of the users
         addItemAndStartCheckout()
 
         checkoutPage.firstNameInput().type(checkoutData.valid.firstName)
-
         checkoutPage.lastNameInput().type(checkoutData.valid.lastName)
-
         checkoutPage.postalCodeInput().type(checkoutData.valid.postalCode)
 
         if (!lastNameWorks) {
@@ -63,23 +69,31 @@ describe('Checkout Feature', () => {
           checkoutPage.finishButton().click()
           checkoutPage.completeMessage().should('contain', 'Thank you for your order!')
         } else {
-          checkoutPage.errorMessage().should('exist') // for problem_user it will not continue as lastname is broken
+          checkoutPage.errorMessage().should('exist')
         }
       })
 
       it('Checkout without required field', () => {
-        if (username === 'error_user') {
-          cy.log('Skipping for error_user')
+        if (checkoutCrash) {
+          cy.on('uncaught:exception', () => false)
+
+          addItemAndStartCheckout()
+
+          checkoutPage.lastNameInput().type(checkoutData.missingFirstName.lastName)
+
+          checkoutPage.postalCodeInput().type(checkoutData.missingFirstName.postalCode)
+
+          checkoutPage.continueButton().click()
+
+          checkoutPage.completeMessage().should('not.exist')
+
           return
         }
 
         addItemAndStartCheckout()
 
-        //  exclude first name
-
+        // Exclude first name
         checkoutPage.lastNameInput().type(checkoutData.missingFirstName.lastName)
-
-        checkoutPage.postalCodeInput().type(checkoutData.missingFirstName.postalCode)
 
         checkoutPage.postalCodeInput().type(checkoutData.missingFirstName.postalCode)
 

@@ -4,7 +4,6 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
     "lint": "eslint cypress --ext .js",
     "lint:fix": "eslint cypress --ext .js --fix",
     "format": "prettier --write ."
